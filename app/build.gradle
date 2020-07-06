@@ -16,6 +16,9 @@ android {
     }
 
     buildTypes {
+        debug {
+            buildConfigField("String", "AZS_CONNECTION_STRING", "\"" + AZS_CONNECTION_STRING +"\"")
+        }
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'

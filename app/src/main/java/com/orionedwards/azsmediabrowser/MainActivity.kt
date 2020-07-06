@@ -12,7 +12,7 @@ class MainActivity : Activity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        val connectionString = ""
+        val connectionString = BuildConfig.AZS_CONNECTION_STRING
 
         val azs = AzureBlobService(connectionString)
     }
