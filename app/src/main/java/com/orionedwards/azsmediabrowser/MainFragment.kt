@@ -87,32 +87,60 @@ class MainFragment : BrowseFragment() {
         searchAffordanceColor = ContextCompat.getColor(context, R.color.search_opaque)
     }
 
+    private fun loadItemsFromAzure(listRowAdapter: ArrayObjectAdapter) {
+        val connectionString = BuildConfig.AZS_CONNECTION_STRING
+
+        val azs = AzureBlobService(connectionString, activity)
+
+        azs.listBlobs("jbbc").subscribe({ page ->
+            val startIdx = listRowAdapter.size()
+            var itemsAdded = 0
+            for(blob in page.elements) {
+                if(!blob.name.endsWith(".mp4")) {
+                    continue // only add videos
+                }
+                itemsAdded += 1
+                listRowAdapter.add(Movie(blob))
+                Log.i(TAG, "Found a block blob: ${blob.name}")
+            }
+            listRowAdapter.notifyItemRangeChanged(startIdx, itemsAdded)
+        }, { error ->
+            Log.e(TAG, "Error listing blobs", error)
+        })
+    }
+
     private fun loadRows() {
-        val list = MovieList.list
 
         val rowsAdapter = ArrayObjectAdapter(ListRowPresenter())
         val cardPresenter = CardPresenter()
 
-        for (i in 0 until NUM_ROWS) {
-            if (i != 0) {
-                Collections.shuffle(list)
-            }
-            val listRowAdapter = ArrayObjectAdapter(cardPresenter)
-            for (j in 0 until NUM_COLS) {
-                listRowAdapter.add(list[j % 5])
-            }
-            val header = HeaderItem(i.toLong(), MovieList.MOVIE_CATEGORY[i])
-            rowsAdapter.add(ListRow(header, listRowAdapter))
-        }
+        val listRowAdapter = ArrayObjectAdapter(cardPresenter)
+        val header = HeaderItem(1, "Budget Bootcamp")
+        rowsAdapter.add(ListRow(header, listRowAdapter))
 
-        val gridHeader = HeaderItem(NUM_ROWS.toLong(), "PREFERENCES")
+        loadItemsFromAzure(listRowAdapter)
 
-        val mGridPresenter = GridItemPresenter()
-        val gridRowAdapter = ArrayObjectAdapter(mGridPresenter)
-        gridRowAdapter.add(resources.getString(R.string.grid_view))
-        gridRowAdapter.add(getString(R.string.error_fragment))
-        gridRowAdapter.add(resources.getString(R.string.personal_settings))
-        rowsAdapter.add(ListRow(gridHeader, gridRowAdapter))
+//
+//        for (i in 0 until NUM_ROWS) {
+//            if (i != 0) {
+//                Collections.shuffle(list)
+//            }
+//            val listRowAdapter = ArrayObjectAdapter(cardPresenter)
+//            for (j in 0 until NUM_COLS) {
+//                listRowAdapter.add(list[j % 5])
+//            }
+//            val header = HeaderItem(i.toLong(), MovieList.MOVIE_CATEGORY[i])
+//            rowsAdapter.add(ListRow(header, listRowAdapter))
+//        }
+
+//        val gridHeader = HeaderItem(NUM_ROWS.toLong(), "PREFERENCES")
+//
+//        val mGridPresenter = GridItemPresenter()
+//        val gridRowAdapter = ArrayObjectAdapter(mGridPresenter)
+//        gridRowAdapter.add(resources.getString(R.string.grid_view))
+//        gridRowAdapter.add(getString(R.string.error_fragment))
+//        gridRowAdapter.add(resources.getString(R.string.personal_settings))
+//        rowsAdapter.add(ListRow(gridHeader, gridRowAdapter))
 
         adapter = rowsAdapter
     }
@@ -221,7 +249,7 @@ class MainFragment : BrowseFragment() {
         private val BACKGROUND_UPDATE_DELAY = 300
         private val GRID_ITEM_WIDTH = 200
         private val GRID_ITEM_HEIGHT = 200
-        private val NUM_ROWS = 6
-        private val NUM_COLS = 15
+        private val NUM_ROWS = 1
+        private val NUM_COLS = 1
     }
 }

@@ -73,14 +73,13 @@ object MovieList {
             videoUrl: String,
             cardImageUrl: String,
             backgroundImageUrl: String): Movie {
-        val movie = Movie()
-        movie.id = count++
-        movie.title = title
-        movie.description = description
-        movie.studio = studio
-        movie.cardImageUrl = cardImageUrl
-        movie.backgroundImageUrl = backgroundImageUrl
-        movie.videoUrl = videoUrl
-        return movie
+        return Movie(
+            count++,
+            title,
+            description,
+            studio,
+            cardImageUrl,
+            backgroundImageUrl,
+            videoUrl)
     }
 }
