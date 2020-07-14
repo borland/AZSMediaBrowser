@@ -1,8 +1,5 @@
 package com.orionedwards.azsmediabrowser
 
-import java.util.Timer
-import java.util.TimerTask
-
 import android.content.Intent
 import android.graphics.Color
 import android.graphics.drawable.Drawable
@@ -38,6 +35,7 @@ import com.bumptech.glide.request.target.SimpleTarget
 import java.net.URLEncoder
 import java.time.OffsetDateTime
 import java.time.ZoneId
+import java.util.*
 
 /**
  * Loads a grid of cards with movies to browse.
@@ -110,17 +108,22 @@ class MainFragment : BrowseFragment() {
                     continue // only add videos
                 }
 
-                val movie = Movie(blob, container.getBlobAsyncClient(URLEncoder.encode(blob.name, "utf-8")))
+                val movie = Movie(blob, container.getBlobAsyncClient(blob.name)) // this fails if there's a % in the filename. TODO work that out
                 val showName = movie.showName
                 var adapter = items[showName]
                 if(adapter == null) {
                     adapter = ArrayObjectAdapter(CardPresenter())
                     val row = ListRow(HeaderItem(showName), adapter)
-                    rowsAdapter.add(row) // do we need NotifyChanged here?
+                    rowsAdapter.add(row) // seems this is sufficient, we don't need notifyChanged
                     items[showName] = adapter
                 }
-
-                adapter.add(movie) // do we need NotifyChanged here?
+                val idx = Collections.binarySearch(adapter.unmodifiableList(), movie)
+                if(idx > 0) {
+                    adapter.add(idx, movie)
+                } else {
+                    // mmm this doesn't work at all
+                    adapter.add(idx.inv(), movie)
+                }
             }
         }, { error ->
             Log.e(TAG, "Error listing blobs", error)
