@@ -3,6 +3,7 @@ package com.orionedwards.azsmediabrowser
 import android.content.Context
 import androidx.core.content.ContextCompat
 import com.azure.core.http.rest.PagedResponse
+import com.azure.storage.blob.BlobAsyncClient
 import com.azure.storage.blob.BlobContainerAsyncClient
 import com.azure.storage.blob.BlobServiceClientBuilder
 import com.azure.storage.blob.models.BlobItem
@@ -12,7 +13,7 @@ import reactor.core.scheduler.Schedulers
 
 /// Returns all its results on the android main thread beacuse we are lazy
 class AzureBlobService(connectionString: String, private val context: Context) {
-    private val blobClient = BlobServiceClientBuilder()
+    val blobClient = BlobServiceClientBuilder()
         .connectionString(connectionString)
         .buildAsyncClient()
 
@@ -20,12 +21,11 @@ class AzureBlobService(connectionString: String, private val context: Context) {
 
     private val mainScheduler = Schedulers.fromExecutor(ContextCompat.getMainExecutor(context))
 
-    fun getBlobContainer(name: String) : BlobContainerAsyncClient {
+    fun clientForContainer(name: String) : BlobContainerAsyncClient {
         return blobClient.getBlobContainerAsyncClient(name)
     }
 
-    fun listBlobs(containerName: String, options: ListBlobsOptions? = null) : Flux<PagedResponse<BlobItem>> =
-        getBlobContainer(containerName)
+    fun listBlobs(container: BlobContainerAsyncClient, options: ListBlobsOptions? = null) : Flux<PagedResponse<BlobItem>> = container
             .listBlobs(options ?: ListBlobsOptions())
             .byPage()
             .publishOn(mainScheduler)

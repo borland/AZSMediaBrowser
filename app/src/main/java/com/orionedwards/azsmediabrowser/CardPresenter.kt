@@ -46,7 +46,6 @@ class CardPresenter : Presenter() {
         Log.d(TAG, "onBindViewHolder")
         if (movie.cardImageUrl != null) {
             cardView.titleText = movie.title
-            cardView.contentText = movie.studio
             cardView.setMainImageDimensions(CARD_WIDTH, CARD_HEIGHT)
             Glide.with(viewHolder.view.context)
                     .load(movie.cardImageUrl)
@@ -75,7 +74,7 @@ class CardPresenter : Presenter() {
     companion object {
         private val TAG = "CardPresenter"
 
-        private val CARD_WIDTH = 313
+        private val CARD_WIDTH = 380
         private val CARD_HEIGHT = 176
     }
 }

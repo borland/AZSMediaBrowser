@@ -16,8 +16,11 @@ class PlaybackVideoFragment : VideoSupportFragment() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        val (_, title, description, _, _, videoUrl) =
-                activity?.intent?.getSerializableExtra(DetailsActivity.MOVIE) as Movie
+        val intent = activity?.intent ?: throw IllegalArgumentException("Can't load PlaybackVideoFragment without an intent")
+
+        val title = intent.getStringExtra(PlaybackActivity.MOVIE_TITLE)
+        val description = intent.getStringExtra(PlaybackActivity.MOVIE_DESCRIPTION)
+        val videoUrl = intent.getStringExtra(PlaybackActivity.MOVIE_URL)
 
         val glueHost = VideoSupportFragmentGlueHost(this@PlaybackVideoFragment)
         val playerAdapter = MediaPlayerAdapter(context)

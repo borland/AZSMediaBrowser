@@ -1,31 +1,48 @@
 package com.orionedwards.azsmediabrowser
 
+import com.azure.storage.blob.BlobAsyncClient
+import com.azure.storage.blob.BlobClient
 import com.azure.storage.blob.models.BlobItem
+import com.azure.storage.blob.sas.BlobSasPermission
+import com.azure.storage.blob.sas.BlobServiceSasSignatureValues
 import java.io.Serializable
+import java.time.OffsetDateTime
 
 /**
  * Movie class represents video entity with title, description, image thumbs and video url.
  */
-data class Movie(
-        val id: Long = 0,
-        val title: String? = null,
-        val description: String? = null,
-        val backgroundImageUrl: String? = null,
-        val cardImageUrl: String? = null,
-        val videoUrl: String? = null,
-        val studio: String? = null
-) : Serializable {
+class Movie(
+        val id: Long,
+        val blob: BlobItem,
+        val blobClient: BlobAsyncClient
+) {
+    constructor(blob: BlobItem, client: BlobAsyncClient): this(
+        nextId(),
+        blob,
+        client)
 
-    constructor(blob: BlobItem): this(nextId(), blob.name)
+    fun authenticatedUrl() : String {
+        return blobClient.blobUrl + "?" + generateSas()
+    }
 
-    override fun toString(): String {
-        return "Movie{" +
-                "id=" + id +
-                ", title='" + title + '\'' +
-                ", videoUrl='" + videoUrl + '\'' +
-                ", backgroundImageUrl='" + backgroundImageUrl + '\'' +
-                ", cardImageUrl='" + cardImageUrl + '\'' +
-                '}'
+    val showName: String
+        get() = blob.name.split('/').first()
+
+    // the name of this particular file. All movies must be .mp4 or we don't even get them
+    val title: String
+        get() = blob.name.split('/').last().removeSuffix(".mp4")
+
+    val backgroundImageUrl: String?
+        get() = null
+
+    val cardImageUrl: String?
+        get() = "https://lh3.googleusercontent.com/HAGDHQduy3JrUiCcjROHMZPjoKF_M3_FutliAUyWskPImePUeC0e1J75DCirXEGl1iOcx9Z9BBjJJuKyf-Fd9w=w1004"
+
+    private fun generateSas(): String {
+        val sasValues = BlobServiceSasSignatureValues(
+            OffsetDateTime.now().plusDays(1),
+            BlobSasPermission().setReadPermission(true))
+        return blobClient.generateSas(sasValues)
     }
 
     companion object {

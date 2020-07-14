@@ -1,6 +1,5 @@
 package com.orionedwards.azsmediabrowser
 
-import java.util.Collections
 import java.util.Timer
 import java.util.TimerTask
 
@@ -13,7 +12,6 @@ import androidx.leanback.app.BackgroundManager
 import androidx.leanback.app.BrowseFragment
 import androidx.leanback.widget.ArrayObjectAdapter
 import androidx.leanback.widget.HeaderItem
-import androidx.leanback.widget.ImageCardView
 import androidx.leanback.widget.ListRow
 import androidx.leanback.widget.ListRowPresenter
 import androidx.leanback.widget.OnItemViewClickedListener
@@ -21,7 +19,6 @@ import androidx.leanback.widget.OnItemViewSelectedListener
 import androidx.leanback.widget.Presenter
 import androidx.leanback.widget.Row
 import androidx.leanback.widget.RowPresenter
-import androidx.core.app.ActivityOptionsCompat
 import androidx.core.content.ContextCompat
 import android.util.DisplayMetrics
 import android.util.Log
@@ -29,11 +26,18 @@ import android.view.Gravity
 import android.view.ViewGroup
 import android.widget.TextView
 import android.widget.Toast
+import com.azure.storage.blob.models.BlobListDetails
+import com.azure.storage.blob.models.ListBlobsOptions
+import com.azure.storage.blob.sas.BlobSasPermission
+import com.azure.storage.blob.sas.BlobServiceSasSignatureValues
 
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.drawable.GlideDrawable
 import com.bumptech.glide.request.animation.GlideAnimation
 import com.bumptech.glide.request.target.SimpleTarget
+import java.net.URLEncoder
+import java.time.OffsetDateTime
+import java.time.ZoneId
 
 /**
  * Loads a grid of cards with movies to browse.
@@ -87,23 +91,37 @@ class MainFragment : BrowseFragment() {
         searchAffordanceColor = ContextCompat.getColor(context, R.color.search_opaque)
     }
 
-    private fun loadItemsFromAzure(listRowAdapter: ArrayObjectAdapter) {
+    private val items = mutableMapOf<String, ArrayObjectAdapter>()
+
+    private fun loadItemsFromAzure(rowsAdapter: ArrayObjectAdapter, containerName: String) {
         val connectionString = BuildConfig.AZS_CONNECTION_STRING
 
         val azs = AzureBlobService(connectionString, activity)
 
-        azs.listBlobs("jbbc").subscribe({ page ->
-            val startIdx = listRowAdapter.size()
-            var itemsAdded = 0
+        val opts = ListBlobsOptions()
+            .setMaxResultsPerPage(50) // streaming load rather than one giant delay
+            .setDetails(BlobListDetails().setRetrieveMetadata(true))
+
+        val container = azs.clientForContainer(containerName)
+
+        azs.listBlobs(container, opts).subscribe({ page ->
             for(blob in page.elements) {
-                if(!blob.name.endsWith(".mp4")) {
+                if (!blob.name.endsWith(".mp4")) {
                     continue // only add videos
                 }
-                itemsAdded += 1
-                listRowAdapter.add(Movie(blob))
-                Log.i(TAG, "Found a block blob: ${blob.name}")
+
+                val movie = Movie(blob, container.getBlobAsyncClient(URLEncoder.encode(blob.name, "utf-8")))
+                val showName = movie.showName
+                var adapter = items[showName]
+                if(adapter == null) {
+                    adapter = ArrayObjectAdapter(CardPresenter())
+                    val row = ListRow(HeaderItem(showName), adapter)
+                    rowsAdapter.add(row) // do we need NotifyChanged here?
+                    items[showName] = adapter
+                }
+
+                adapter.add(movie) // do we need NotifyChanged here?
             }
-            listRowAdapter.notifyItemRangeChanged(startIdx, itemsAdded)
         }, { error ->
             Log.e(TAG, "Error listing blobs", error)
         })
@@ -112,35 +130,8 @@ class MainFragment : BrowseFragment() {
     private fun loadRows() {
 
         val rowsAdapter = ArrayObjectAdapter(ListRowPresenter())
-        val cardPresenter = CardPresenter()
-
-        val listRowAdapter = ArrayObjectAdapter(cardPresenter)
-        val header = HeaderItem(1, "Budget Bootcamp")
-        rowsAdapter.add(ListRow(header, listRowAdapter))
-
-        loadItemsFromAzure(listRowAdapter)
-
-//
-//        for (i in 0 until NUM_ROWS) {
-//            if (i != 0) {
-//                Collections.shuffle(list)
-//            }
-//            val listRowAdapter = ArrayObjectAdapter(cardPresenter)
-//            for (j in 0 until NUM_COLS) {
-//                listRowAdapter.add(list[j % 5])
-//            }
-//            val header = HeaderItem(i.toLong(), MovieList.MOVIE_CATEGORY[i])
-//            rowsAdapter.add(ListRow(header, listRowAdapter))
-//        }
-
-//        val gridHeader = HeaderItem(NUM_ROWS.toLong(), "PREFERENCES")
-//
-//        val mGridPresenter = GridItemPresenter()
-//        val gridRowAdapter = ArrayObjectAdapter(mGridPresenter)
-//        gridRowAdapter.add(resources.getString(R.string.grid_view))
-//        gridRowAdapter.add(getString(R.string.error_fragment))
-//        gridRowAdapter.add(resources.getString(R.string.personal_settings))
-//        rowsAdapter.add(ListRow(gridHeader, gridRowAdapter))
+        
+        loadItemsFromAzure(rowsAdapter, "mov")
 
         adapter = rowsAdapter
     }
@@ -164,15 +155,13 @@ class MainFragment : BrowseFragment() {
 
             if (item is Movie) {
                 Log.d(TAG, "Item: " + item.toString())
-                val intent = Intent(context, DetailsActivity::class.java)
-                intent.putExtra(DetailsActivity.MOVIE, item)
 
-                val bundle = ActivityOptionsCompat.makeSceneTransitionAnimation(
-                        activity,
-                        (itemViewHolder.view as ImageCardView).mainImageView,
-                        DetailsActivity.SHARED_ELEMENT_NAME)
-                        .toBundle()
-                activity.startActivity(intent, bundle)
+                val intent = Intent(context, PlaybackActivity::class.java)
+                intent.putExtra(PlaybackActivity.MOVIE_TITLE, item.title)
+                intent.putExtra(PlaybackActivity.MOVIE_DESCRIPTION, item.showName)
+                intent.putExtra(PlaybackActivity.MOVIE_URL, item.authenticatedUrl())
+                startActivity(intent)
+
             } else if (item is String) {
                 if (item.contains(getString(R.string.error_fragment))) {
                     val intent = Intent(context, BrowseErrorActivity::class.java)
@@ -249,7 +238,5 @@ class MainFragment : BrowseFragment() {
         private val BACKGROUND_UPDATE_DELAY = 300
         private val GRID_ITEM_WIDTH = 200
         private val GRID_ITEM_HEIGHT = 200
-        private val NUM_ROWS = 1
-        private val NUM_COLS = 1
     }
 }

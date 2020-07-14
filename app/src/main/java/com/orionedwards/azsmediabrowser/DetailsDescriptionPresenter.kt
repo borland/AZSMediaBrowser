@@ -9,8 +9,7 @@ class DetailsDescriptionPresenter : AbstractDetailsDescriptionPresenter() {
             item: Any) {
         val movie = item as Movie
 
-        viewHolder.title.text = movie.title
-        viewHolder.subtitle.text = movie.studio
-        viewHolder.body.text = movie.description
+        viewHolder.title.text = movie.showName
+        viewHolder.body.text = movie.title
     }
 }
