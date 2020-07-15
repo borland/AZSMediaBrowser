@@ -121,7 +121,6 @@ class MainFragment : BrowseFragment() {
                 if(idx > 0) {
                     adapter.add(idx, movie)
                 } else {
-                    // mmm this doesn't work at all
                     adapter.add(idx.inv(), movie)
                 }
             }
@@ -140,11 +139,6 @@ class MainFragment : BrowseFragment() {
     }
 
     private fun setupEventListeners() {
-        setOnSearchClickedListener {
-            Toast.makeText(context, "Implement your own in-app search", Toast.LENGTH_LONG)
-                    .show()
-        }
-
         onItemViewClickedListener = ItemViewClickedListener()
         onItemViewSelectedListener = ItemViewSelectedListener()
     }

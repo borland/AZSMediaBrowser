@@ -1,14 +1,17 @@
 package com.orionedwards.azsmediabrowser
 
 import android.graphics.drawable.Drawable
-import androidx.leanback.widget.ImageCardView
-import androidx.leanback.widget.Presenter
-import androidx.core.content.ContextCompat
 import android.util.Log
 import android.view.ViewGroup
-
+import android.widget.TextView
+import androidx.core.content.ContextCompat
+import androidx.core.widget.TextViewCompat
+import androidx.core.widget.TextViewCompat.AUTO_SIZE_TEXT_TYPE_UNIFORM
+import androidx.leanback.widget.ImageCardView
+import androidx.leanback.widget.Presenter
 import com.bumptech.glide.Glide
 import kotlin.properties.Delegates
+
 
 /**
  * A CardPresenter is used to generate Views and bind Objects to them on demand.
@@ -47,6 +50,11 @@ class CardPresenter : Presenter() {
         if (movie.cardImageUrl != null) {
             cardView.titleText = movie.title
             cardView.setMainImageDimensions(CARD_WIDTH, CARD_HEIGHT)
+
+            val titleTextView: TextView = cardView.findViewById(R.id.title_text)
+            titleTextView.isSingleLine = false
+            titleTextView.textSize = 12f
+
             Glide.with(viewHolder.view.context)
                     .load(movie.cardImageUrl)
                     .centerCrop()
