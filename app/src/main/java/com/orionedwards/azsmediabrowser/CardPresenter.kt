@@ -18,7 +18,7 @@ import kotlin.properties.Delegates
  * It contains an ImageCardView.
  */
 class CardPresenter : Presenter() {
-    private var mDefaultCardImage: Drawable? = null
+    private val thumbnailService = MainActivity.thumbnailService
     private var sSelectedBackgroundColor: Int by Delegates.notNull()
     private var sDefaultBackgroundColor: Int by Delegates.notNull()
 
@@ -27,7 +27,6 @@ class CardPresenter : Presenter() {
 
         sDefaultBackgroundColor = ContextCompat.getColor(parent.context, R.color.default_background)
         sSelectedBackgroundColor = ContextCompat.getColor(parent.context, R.color.selected_background)
-        mDefaultCardImage = ContextCompat.getDrawable(parent.context, R.drawable.movie)
 
         val cardView = object : ImageCardView(parent.context) {
             override fun setSelected(selected: Boolean) {
@@ -47,20 +46,15 @@ class CardPresenter : Presenter() {
         val cardView = viewHolder.view as ImageCardView
 
         Log.d(TAG, "onBindViewHolder")
-        if (movie.cardImageUrl != null) {
-            cardView.titleText = movie.title
-            cardView.setMainImageDimensions(CARD_WIDTH, CARD_HEIGHT)
 
-            val titleTextView: TextView = cardView.findViewById(R.id.title_text)
-            titleTextView.isSingleLine = false
-            titleTextView.textSize = 12f
+        cardView.titleText = movie.title
+        cardView.setMainImageDimensions(CARD_WIDTH, CARD_HEIGHT)
 
-            Glide.with(viewHolder.view.context)
-                    .load(movie.cardImageUrl)
-                    .centerCrop()
-                    .error(mDefaultCardImage)
-                    .into(cardView.mainImageView)
-        }
+        val titleTextView: TextView = cardView.findViewById(R.id.title_text)
+        titleTextView.isSingleLine = false
+        titleTextView.textSize = 12f
+
+        thumbnailService.loadMovieThumb(movie, intoImageView = cardView.mainImageView)
     }
 
     override fun onUnbindViewHolder(viewHolder: Presenter.ViewHolder) {

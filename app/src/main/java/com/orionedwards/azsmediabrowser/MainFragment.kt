@@ -5,36 +5,20 @@ import android.graphics.Color
 import android.graphics.drawable.Drawable
 import android.os.Bundle
 import android.os.Handler
-import androidx.leanback.app.BackgroundManager
-import androidx.leanback.app.BrowseFragment
-import androidx.leanback.widget.ArrayObjectAdapter
-import androidx.leanback.widget.HeaderItem
-import androidx.leanback.widget.ListRow
-import androidx.leanback.widget.ListRowPresenter
-import androidx.leanback.widget.OnItemViewClickedListener
-import androidx.leanback.widget.OnItemViewSelectedListener
-import androidx.leanback.widget.Presenter
-import androidx.leanback.widget.Row
-import androidx.leanback.widget.RowPresenter
-import androidx.core.content.ContextCompat
 import android.util.DisplayMetrics
 import android.util.Log
 import android.view.Gravity
 import android.view.ViewGroup
 import android.widget.TextView
 import android.widget.Toast
+import androidx.core.content.ContextCompat
+import androidx.leanback.app.BackgroundManager
+import androidx.leanback.app.BrowseFragment
+import androidx.leanback.widget.*
 import com.azure.storage.blob.models.BlobListDetails
 import com.azure.storage.blob.models.ListBlobsOptions
-import com.azure.storage.blob.sas.BlobSasPermission
-import com.azure.storage.blob.sas.BlobServiceSasSignatureValues
-
 import com.bumptech.glide.Glide
-import com.bumptech.glide.load.resource.drawable.GlideDrawable
-import com.bumptech.glide.request.animation.GlideAnimation
 import com.bumptech.glide.request.target.SimpleTarget
-import java.net.URLEncoder
-import java.time.OffsetDateTime
-import java.time.ZoneId
 import java.util.*
 
 /**
@@ -181,20 +165,20 @@ class MainFragment : BrowseFragment() {
     }
 
     private fun updateBackground(uri: String?) {
-        val width = mMetrics.widthPixels
-        val height = mMetrics.heightPixels
-        Glide.with(context)
-                .load(uri)
-                .centerCrop()
-                .error(mDefaultBackground)
-                .into<SimpleTarget<GlideDrawable>>(
-                        object : SimpleTarget<GlideDrawable>(width, height) {
-                            override fun onResourceReady(resource: GlideDrawable,
-                                                         glideAnimation: GlideAnimation<in GlideDrawable>) {
-                                mBackgroundManager.drawable = resource
-                            }
-                        })
-        mBackgroundTimer?.cancel()
+//        val width = mMetrics.widthPixels
+//        val height = mMetrics.heightPixels
+//        Glide.with(context)
+//                .load(uri)
+//                .centerCrop()
+//                .error(mDefaultBackground)
+//                .into<SimpleTarget<GlideDrawable>>(
+//                        object : SimpleTarget<GlideDrawable>(width, height) {
+//                            override fun onResourceReady(resource: GlideDrawable,
+//                                                         glideAnimation: GlideAnimation<in GlideDrawable>) {
+//                                mBackgroundManager.drawable = resource
+//                            }
+//                        })
+//        mBackgroundTimer?.cancel()
     }
 
     private fun startBackgroundTimer() {

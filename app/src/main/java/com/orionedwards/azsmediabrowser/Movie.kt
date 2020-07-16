@@ -38,8 +38,7 @@ class Movie(
         get() = null
 
     val cardImageUrl: String?
-        get() = "https://cinemaone.net/images/movie_placeholder.png"
-            //"https://lh3.googleusercontent.com/HAGDHQduy3JrUiCcjROHMZPjoKF_M3_FutliAUyWskPImePUeC0e1J75DCirXEGl1iOcx9Z9BBjJJuKyf-Fd9w=w1004"
+        get() = "https://lh3.googleusercontent.com/HAGDHQduy3JrUiCcjROHMZPjoKF_M3_FutliAUyWskPImePUeC0e1J75DCirXEGl1iOcx9Z9BBjJJuKyf-Fd9w=w1004"
 
     private fun generateSas(): String {
         val sasValues = BlobServiceSasSignatureValues(
